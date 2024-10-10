@@ -1,0 +1,3 @@
+[submodule "ext/sourcepp"]
+	path = ext/sourcepp
+	url = https://github.com/craftablescience/sourcepp

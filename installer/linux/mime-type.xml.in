@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+    <mime-type type="application/x-cmdseq">
+        <comment>WorldCraft Command Sequence</comment>
+        <acronym>WC</acronym>
+        <expanded-acronym>WorldCraft</expanded-acronym>
+        <glob-deleteall/>
+        <glob pattern="*.wc"/>
+        <glob pattern="*.WC"/>
+    </mime-type>
+</mime-info>
