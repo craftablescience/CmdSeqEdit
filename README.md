@@ -1,5 +1,5 @@
 <div>
-  <img align="left" width="44px" src="https://github.com/craftablescience/VPKEdit/blob/main/res/logo.png?raw=true" alt="CmdSeqEdit Logo" />
+  <img align="left" width="44px" src="https://github.com/craftablescience/CmdSeqEdit/blob/main/res/logo.png?raw=true" alt="CmdSeqEdit Logo" />
   <h1>CmdSeqEdit</h1>
 </div>
 
