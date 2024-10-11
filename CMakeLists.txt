@@ -53,11 +53,33 @@ function(cmdseqedit_configure_target TARGET)
     endif()
 
     if(WIN32 AND MSVC)
-        # Create PDBs in release
         get_target_property(TARGET_TYPE ${TARGET} TYPE)
-        if((TARGET_TYPE STREQUAL "SHARED_LIBRARY") OR (TARGET_TYPE STREQUAL "EXECUTABLE"))
-            target_compile_options(${TARGET} PRIVATE "$<$<CONFIG:Release>:/Zi>")
-            target_link_options(${TARGET} PRIVATE "$<$<CONFIG:Release>:/DEBUG>" "$<$<CONFIG:Release>:/OPT:REF>" "$<$<CONFIG:Release>:/OPT:ICF>")
+        get_target_property(TARGET_IS_GUI ${TARGET} WIN32_EXECUTABLE)
+
+        # Create PDBs in release
+        if(MSVC AND ((TARGET_TYPE STREQUAL "SHARED_LIBRARY") OR (TARGET_TYPE STREQUAL "EXECUTABLE")))
+            target_compile_options(
+                    ${TARGET} PRIVATE
+                    "$<$<CONFIG:Release>:/Zi>")
+            target_link_options(
+                    ${TARGET} PRIVATE
+                    "$<$<CONFIG:Release>:/DEBUG>"
+                    "$<$<CONFIG:Release>:/OPT:REF>"
+                    "$<$<CONFIG:Release>:/OPT:ICF>")
+        endif()
+
+        # Add an icon to the executable
+        if(TARGET_TYPE STREQUAL "EXECUTABLE")
+            target_sources(
+                    ${TARGET} PRIVATE
+                    "${CMAKE_CURRENT_SOURCE_DIR}/res/logo.rc")
+        endif()
+
+        # Don't show the console when running the executable
+        if(MSVC AND TARGET_IS_GUI)
+            target_link_options(
+                    ${TARGET} PRIVATE
+                    "/ENTRY:mainCRTStartup")
         endif()
     endif()
 endfunction()

@@ -105,7 +105,7 @@ if(WIN32)
     set(HELP_QUOTE "\"") # CMake is shit
     set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
             WriteRegStr HKCR '.wc' '' '${PROJECT_NAME_PRETTY}'
-            WriteRegStr HKCR '${PROJECT_NAME_PRETTY}' '' 'WorldCraft Command Sequences'
+            WriteRegStr HKCR '${PROJECT_NAME_PRETTY}' '' 'Worldcraft Command Sequences'
             WriteRegStr HKCR '${PROJECT_NAME_PRETTY}\\\\shell' '' 'open'
             WriteRegStr HKCR '${PROJECT_NAME_PRETTY}\\\\DefaultIcon' '' '$INSTDIR\\\\${PROJECT_NAME}.exe,0'
             WriteRegStr HKCR '${PROJECT_NAME_PRETTY}\\\\shell\\\\open\\\\command' '' '$INSTDIR\\\\${PROJECT_NAME}.exe \\${HELP_QUOTE}%1\\${HELP_QUOTE}'
