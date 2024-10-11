@@ -4,12 +4,10 @@
 #include <ranges>
 
 #include <kvpp/kvpp.h>
-#include <QAction>
 #include <QActionGroup>
 #include <QApplication>
 #include <QDesktopServices>
 #include <QDragEnterEvent>
-#include <QDropEvent>
 #include <QFileDialog>
 #include <QMenu>
 #include <QMenuBar>
@@ -20,10 +18,11 @@
 #include <QStyleFactory>
 #include <QThread>
 #include <QVBoxLayout>
+#include <sourcepp/FS.h>
 #include <steampp/steampp.h>
 
 #include "../utility/Options.h"
-#include "../utility/TGADecoder.h"
+#include "../utility/ImageLoader.h"
 #include "../Version.h"
 
 using namespace kvpp;
@@ -33,9 +32,8 @@ using namespace toolpp;
 Window::Window(QWidget* parent)
 		: QMainWindow(parent)
 		, cmdSeq(std::nullopt)
-		, modified(false)
 		, scanSteamGamesWorkerThread(nullptr) {
-	this->setWindowTitle(PROJECT_TITLE.data());
+	this->setWindowTitle(PROJECT_TITLE.data() + QString{"[*]"});
 	this->setWindowIcon(QIcon(":/logo.png"));
 
 	// File menu
@@ -84,7 +82,7 @@ Window::Window(QWidget* parent)
 		auto* themeMenuGroup = new QActionGroup{themeMenu};
 		themeMenuGroup->setExclusive(true);
 		for (const auto& themeName : QStyleFactory::keys()) {
-			auto* action = themeMenu->addAction(themeName, [this, themeName] {
+			auto* action = themeMenu->addAction(themeName, [themeName] {
 				QApplication::setStyle(themeName);
 				Options::set(OPT_STYLE, themeName);
 			});
@@ -149,7 +147,7 @@ Window::Window(QWidget* parent)
 }
 
 bool Window::promptUserToKeepModifications() {
-	if (!this->modified) {
+	if (!this->isWindowModified()) {
 		return false;
 	}
 	const auto response = QMessageBox::warning(this,
@@ -343,14 +341,8 @@ void Window::rebuildOpenRecentMenu(const QStringList& paths) {
 }
 
 void Window::markModified(bool mod) {
-	this->modified = mod;
+	this->setWindowModified(mod);
 	this->updateMenuState();
-
-	if (this->modified) {
-		this->setWindowTitle(PROJECT_TITLE.data() + QString{" (*)"});
-	} else {
-		this->setWindowTitle(PROJECT_TITLE.data());
-	}
 }
 
 void Window::updateMenuState() const {
@@ -359,8 +351,8 @@ void Window::updateMenuState() const {
 		this->saveAsAction->setDisabled(true);
 		this->closeAction->setDisabled(true);
 	} else {
-		this->saveAction->setDisabled(!this->modified);
-		this->saveAsAction->setDisabled(!this->modified);
+		this->saveAction->setDisabled(!this->isWindowModified());
+		this->saveAsAction->setDisabled(!this->isWindowModified());
 		this->closeAction->setDisabled(false);
 	}
 }
@@ -384,12 +376,14 @@ void ScanSteamGamesWorker::run() {
 		if (!steam.isAppUsingSourceEngine(appID) && !steam.isAppUsingSource2Engine(appID)) {
 			continue;
 		}
-		auto iconPath = steam.getAppIconPath(appID);
-		sourceGames.emplace_back(steam.getAppName(appID).data(), iconPath.empty() ? QIcon(":/icons/missing_app.png") : QIcon(iconPath.c_str()), steam.getAppInstallDir(appID).c_str());
+		sourceGames.emplace_back(
+				steam.getAppName(appID).data(),
+				QIcon{QPixmap::fromImage(ImageLoader::load(steam.getAppIconPath(appID).c_str()))},
+				steam.getAppInstallDir(appID).c_str());
 	}
 
 	// Add mods in the sourcemods directory
-	for (const auto& modDir : std::filesystem::directory_iterator{steam.getSourceModDir()}) {
+	for (const auto& modDir : std::filesystem::directory_iterator{steam.getSourceModDir(), std::filesystem::directory_options::skip_permission_denied | std::filesystem::directory_options::follow_directory_symlink}) {
 		if (!modDir.is_directory()) {
 			continue;
 		}
@@ -432,8 +426,10 @@ void ScanSteamGamesWorker::run() {
 			}
 		}
 
-		std::optional<QImage> modIconTGA = modIconPath.empty() ? std::nullopt : TGADecoder::decodeImage(modIconPath.c_str());
-		sourceGames.emplace_back(modName.c_str(), modIconTGA ? QIcon(QPixmap::fromImage(*modIconTGA)) : QIcon(":/icons/missing_app.png"), modDir.path().string().c_str());
+		sourceGames.emplace_back(
+				modName.c_str(),
+				QIcon{QPixmap::fromImage(ImageLoader::load(modIconPath.c_str()))},
+				modDir.path().string().c_str());
 	}
 
 	// Replace & with && in game names

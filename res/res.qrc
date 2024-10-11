@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/">
-        <file>icons/missing_app.png</file>
+        <file>icons/missing.png</file>
 
         <file>logo.png</file>
     </qresource>

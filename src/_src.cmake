@@ -7,10 +7,10 @@ configure_file(
 add_executable(${PROJECT_NAME} WIN32
         "${CMAKE_CURRENT_SOURCE_DIR}/res/res.qrc"
 
+        "${CMAKE_CURRENT_LIST_DIR}/utility/ImageLoader.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/utility/ImageLoader.h"
         "${CMAKE_CURRENT_LIST_DIR}/utility/Options.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/utility/Options.h"
-        "${CMAKE_CURRENT_LIST_DIR}/utility/TGADecoder.cpp"
-        "${CMAKE_CURRENT_LIST_DIR}/utility/TGADecoder.h"
 
         "${CMAKE_CURRENT_LIST_DIR}/widgets/Window.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/widgets/Window.h"
@@ -26,7 +26,8 @@ target_link_libraries(
         Qt::Widgets
         sourcepp::kvpp
         sourcepp::steampp
-        sourcepp::toolpp)
+        sourcepp::toolpp
+        sourcepp::vtfpp)
 
 target_include_directories(
         ${PROJECT_NAME} PUBLIC

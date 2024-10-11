@@ -47,7 +47,6 @@ private:
 	void updateMenuState() const;
 
 	std::optional<toolpp::CmdSeq> cmdSeq;
-	bool modified;
 
 	QMenu*   openRelativeToMenu;
 	QMenu*   openRecentMenu;
