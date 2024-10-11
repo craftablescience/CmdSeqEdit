@@ -28,19 +28,24 @@ int main(int argc, char** argv) {
     Options::setupOptions(*options);
 
     auto* window = new Window{};
-    options->beginGroup("main_window");
-    window->restoreGeometry(options->value("geometry", window->saveGeometry()).toByteArray());
-    window->restoreState(options->value("state", window->saveState()).toByteArray());
-    if (options->contains("position")) {
-        window->move(options->value("position", window->pos()).toPoint());
-    }
-    window->resize(options->value("size", QSize{900, 500}).toSize());
-    if (options->value("maximized", window->isMaximized()).toBool()) {
-        window->showMaximized();
-    } else {
-        window->show();
-    }
-    options->endGroup();
+	if (options->childGroups().contains("main_window")) {
+		options->beginGroup("main_window");
+		window->restoreGeometry(options->value("geometry", window->saveGeometry()).toByteArray());
+		window->restoreState(options->value("state", window->saveState()).toByteArray());
+		if (options->contains("position")) {
+			window->move(options->value("position", window->pos()).toPoint());
+		}
+		window->resize(options->value("size", QSize{600, 400}).toSize());
+		if (options->value("maximized", window->isMaximized()).toBool()) {
+			window->showMaximized();
+		} else {
+			window->show();
+		}
+		options->endGroup();
+	} else {
+		window->resize(600, 400);
+		window->show();
+	}
 
     return QApplication::exec();
 }
