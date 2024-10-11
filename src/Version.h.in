@@ -2,5 +2,7 @@
 
 #include <string_view>
 
-constexpr std::string_view PROJECT_NAME    = "${PROJECT_NAME_PRETTY}";
-constexpr std::string_view PROJECT_VERSION = "${PROJECT_VERSION}";
+constexpr std::string_view PROJECT_NAME      = "${PROJECT_NAME_PRETTY}";
+constexpr std::string_view PROJECT_VERSION   = "${PROJECT_VERSION}";
+constexpr std::string_view ORGANIZATION_NAME = "${PROJECT_ORGANIZATION_NAME}";
+constexpr std::string_view PROJECT_TITLE     = "${PROJECT_NAME_PRETTY} v${PROJECT_VERSION}";

@@ -6,6 +6,7 @@ project(cmdseqedit
         VERSION "1.0.0"
         HOMEPAGE_URL "https://github.com/craftablescience/CmdSeqEdit")
 set(PROJECT_NAME_PRETTY "CmdSeqEdit")
+set(PROJECT_ORGANIZATION_NAME "craftablescience" CACHE STRING "" FORCE)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 

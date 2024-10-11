@@ -6,6 +6,15 @@ configure_file(
 # Create executable
 add_executable(${PROJECT_NAME} WIN32
         "${CMAKE_CURRENT_SOURCE_DIR}/res/res.qrc"
+
+        "${CMAKE_CURRENT_LIST_DIR}/utility/Options.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/utility/Options.h"
+        "${CMAKE_CURRENT_LIST_DIR}/utility/TGADecoder.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/utility/TGADecoder.h"
+
+        "${CMAKE_CURRENT_LIST_DIR}/widgets/Window.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/widgets/Window.h"
+
         "${CMAKE_CURRENT_LIST_DIR}/Main.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/Version.h")
 
@@ -15,6 +24,8 @@ target_link_libraries(
         Qt::Core
         Qt::Gui
         Qt::Widgets
+        sourcepp::kvpp
+        sourcepp::steampp
         sourcepp::toolpp)
 
 target_include_directories(
