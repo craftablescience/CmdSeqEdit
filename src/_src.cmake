@@ -12,6 +12,12 @@ add_executable(${PROJECT_NAME} WIN32
         "${CMAKE_CURRENT_LIST_DIR}/utility/Options.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/utility/Options.h"
 
+        "${CMAKE_CURRENT_LIST_DIR}/widgets/CommandList.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/widgets/CommandList.h"
+        "${CMAKE_CURRENT_LIST_DIR}/widgets/CommandProperties.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/widgets/CommandProperties.h"
+        "${CMAKE_CURRENT_LIST_DIR}/widgets/SequenceList.cpp"
+        "${CMAKE_CURRENT_LIST_DIR}/widgets/SequenceList.h"
         "${CMAKE_CURRENT_LIST_DIR}/widgets/Window.cpp"
         "${CMAKE_CURRENT_LIST_DIR}/widgets/Window.h"
 

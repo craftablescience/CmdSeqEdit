@@ -6,9 +6,12 @@
 #include <QMainWindow>
 #include <toolpp/CmdSeq.h>
 
+class CommandListView;
+class CommandProperties;
 class QAction;
 class QMenu;
 class QThread;
+class SequenceListView;
 
 class Window : public QMainWindow {
 	Q_OBJECT;
@@ -17,6 +20,8 @@ public:
 	explicit Window(QWidget* parent = nullptr);
 
 	[[nodiscard]] bool promptUserToKeepModifications();
+
+	[[nodiscard]] toolpp::CmdSeq* getCmdSeq();
 
 protected:
 	void dragEnterEvent(QDragEnterEvent* event) override;
@@ -55,6 +60,10 @@ private:
 	QAction* closeAction;
 
 	QThread* scanSteamGamesWorkerThread;
+
+	SequenceListView* sequenceList;
+	CommandListView* commandList;
+	CommandProperties* commandProperties;
 };
 
 class ScanSteamGamesWorker : public QObject {

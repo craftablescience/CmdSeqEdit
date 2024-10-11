@@ -2,10 +2,7 @@
 
 #include <QApplication>
 #include <QFileInfo>
-#include <QMetaType>
 #include <QStyle>
-
-Q_DECLARE_METATYPE(QStringList)
 
 QSettings* opts = nullptr;
 

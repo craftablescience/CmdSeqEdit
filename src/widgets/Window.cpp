@@ -23,6 +23,9 @@
 #include "../utility/Options.h"
 #include "../utility/ImageLoader.h"
 #include "../Version.h"
+#include "CommandList.h"
+#include "CommandProperties.h"
+#include "SequenceList.h"
 
 using namespace kvpp;
 using namespace steampp;
@@ -104,36 +107,36 @@ Window::Window(QWidget* parent)
 
 	// Help menu
 	auto* helpMenu = this->menuBar()->addMenu(tr("Help"));
-	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("About"), Qt::Key_F1, [this] {
-		this->about();
-	});
-	helpMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("About Qt"), Qt::ALT | Qt::Key_F1, [this] {
-		QMessageBox::aboutQt(this);
-	});
+	{
+		helpMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("About"), Qt::Key_F1, [this] {
+			this->about();
+		});
+		helpMenu->addAction(this->style()->standardIcon(QStyle::SP_DialogHelpButton), tr("About Qt"), Qt::ALT | Qt::Key_F1, [this] {
+			QMessageBox::aboutQt(this);
+		});
+	}
 
-	// Split content into two resizeable panes
+	// Split content into three resizeable panes
 	auto* splitter = new QSplitter{Qt::Horizontal, this};
 	this->setCentralWidget(splitter);
 
 	// Left pane
-	auto* leftPane = new QWidget{splitter};
-	auto* leftPaneLayout = new QVBoxLayout{leftPane};
-	leftPaneLayout->setContentsMargins(4, 4, 0, 0);
+	this->sequenceList = new SequenceListView{this, splitter};
+	this->sequenceList->setMinimumWidth(100);
+	splitter->addWidget(this->sequenceList);
+	splitter->setStretchFactor(0, 1);
 
-	//this->entryTree = new EntryTree(this, leftPane);
-	//leftPaneLayout->addWidget(this->entryTree);
-
-	splitter->addWidget(leftPane);
+	// Center pane
+	this->commandList = new CommandListView{splitter};
+	this->commandList->setMinimumWidth(100);
+	splitter->addWidget(this->commandList);
+	splitter->setStretchFactor(1, 1);
 
 	// Right pane
-	auto* rightPane = new QWidget{splitter};
-	auto* rightPaneLayout = new QVBoxLayout{rightPane};
-	rightPaneLayout->setContentsMargins(0, 4, 4, 0);
-
-	//this->fileViewer = new FileViewer(this, rightPane);
-	//rightPaneLayout->addWidget(this->fileViewer);
-
-	splitter->addWidget(rightPane);
+	this->commandProperties = new CommandProperties{splitter};
+	this->commandProperties->setMinimumWidth(100);
+	splitter->addWidget(this->commandProperties);
+	splitter->setStretchFactor(2, 3);
 
 	// Clear everything
 	this->closeFile();
@@ -165,6 +168,10 @@ bool Window::promptUserToKeepModifications() {
 			break;
 	}
 	return true;
+}
+
+toolpp::CmdSeq* Window::getCmdSeq() {
+	return this->cmdSeq.has_value() ? &this->cmdSeq.value() : nullptr;
 }
 
 void Window::dragEnterEvent(QDragEnterEvent* event) {
@@ -226,11 +233,14 @@ bool Window::loadFile(const QString& path) {
 		return false;
 	}
 
+	this->sequenceList->beginRefresh();
 	this->cmdSeq = CmdSeq{path.toLocal8Bit().constData()};
 	if (!this->cmdSeq.value()) {
 		this->cmdSeq = std::nullopt;
+		this->sequenceList->endRefresh();
 		return false;
 	}
+	this->sequenceList->endRefresh();
 
 	// Add to recent paths
 	if (auto recentPaths = Options::get<QStringList>(STR_OPEN_RECENT); !recentPaths.contains(path)) {
@@ -246,8 +256,6 @@ bool Window::loadFile(const QString& path) {
 		Options::set(STR_OPEN_RECENT, recentPaths);
 		this->rebuildOpenRecentMenu(recentPaths);
 	}
-
-	// todo: load
 
 	this->markModified(false);
 	return true;
@@ -270,9 +278,10 @@ bool Window::closeFile() {
 		this->updateMenuState();
 		return true;
 	}
-	this->cmdSeq = std::nullopt;
 
-	// todo: close
+	this->sequenceList->beginRefresh();
+	this->cmdSeq = std::nullopt;
+	this->sequenceList->endRefresh();
 
 	this->markModified(false);
 	return true;
