@@ -54,7 +54,7 @@ jobs:
       - name: Upload Standalone
         uses: actions/upload-artifact@v4
         with:
-          name: '${{matrix.target}}-Windows-Standalone-${{matrix.compiler}}-${{matrix.build_type}}'
+          name: 'CmdSeqEdit-Windows-Standalone-${{matrix.compiler}}-${{matrix.build_type}}'
           path: |
             ${{env.BUILD_DIR}}/LICENSE
             ${{env.BUILD_DIR}}/cmdseqedit.exe
@@ -70,7 +70,7 @@ jobs:
       - name: Upload Installer
         uses: actions/upload-artifact@v4
         with:
-          name: '${{matrix.target}}-Windows-Installer-${{matrix.compiler}}-${{matrix.build_type}}'
+          name: 'CmdSeqEdit-Windows-Installer-${{matrix.compiler}}-${{matrix.build_type}}'
           path: |
             ${{env.BUILD_DIR}}/CmdSeqEdit-*-win64.exe
           retention-days: 7
@@ -98,7 +98,7 @@ jobs:
         if: ${{matrix.build_type == 'Release'}}
         uses: actions/upload-artifact@v4
         with:
-          name: '${{matrix.target}}-Windows-Standalone-Compatibility-${{matrix.compiler}}-${{matrix.build_type}}'
+          name: 'CmdSeqEdit-Windows-Standalone-Compatibility-${{matrix.compiler}}-${{matrix.build_type}}'
           path: |
             ${{env.BUILD_DIR}}/LICENSE
             ${{env.BUILD_DIR}}/cmdseqedit.exe
@@ -116,7 +116,7 @@ jobs:
         if: ${{matrix.build_type == 'Release'}}
         uses: actions/upload-artifact@v4
         with:
-          name: '${{matrix.target}}-Windows-Installer-Compatibility-${{matrix.compiler}}-${{matrix.build_type}}'
+          name: 'CmdSeqEdit-Windows-Installer-Compatibility-${{matrix.compiler}}-${{matrix.build_type}}'
           path: |
             ${{env.BUILD_DIR}}/CmdSeqEdit-*-win64.exe
           retention-days: 7
@@ -124,7 +124,7 @@ jobs:
       - name: Upload Standalone PDBs
         uses: actions/upload-artifact@v4
         with:
-          name: '${{matrix.target}}-Windows-PDBs-${{matrix.compiler}}-${{matrix.build_type}}'
+          name: 'CmdSeqEdit-Windows-PDBs-${{matrix.compiler}}-${{matrix.build_type}}'
           path: |
             ${{env.BUILD_DIR}}/cmdseqedit.pdb
           retention-days: 7
@@ -188,7 +188,7 @@ jobs:
         if: ${{matrix.compiler == 'gcc'}}
         uses: actions/upload-artifact@v4
         with:
-          name: '${{matrix.target}}-Linux-Standalone-${{matrix.compiler}}-${{matrix.build_type}}'
+          name: 'CmdSeqEdit-Linux-Standalone-${{matrix.compiler}}-${{matrix.build_type}}'
           path: |
             ${{env.BUILD_DIR}}/LICENSE
             ${{env.BUILD_DIR}}/cmdseqedit
@@ -212,7 +212,7 @@ jobs:
         if: ${{matrix.compiler == 'gcc'}}
         uses: actions/upload-artifact@v4
         with:
-          name: '${{matrix.target}}-Linux-Installer-${{matrix.compiler}}-${{matrix.build_type}}'
+          name: 'CmdSeqEdit-Linux-Installer-${{matrix.compiler}}-${{matrix.build_type}}'
           path: |
             ${{env.BUILD_DIR}}/CmdSeqEdit-*-Linux.deb
           retention-days: 7
