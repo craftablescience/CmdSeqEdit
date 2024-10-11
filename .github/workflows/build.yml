@@ -1,0 +1,256 @@
+name: Build
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    # nothing here
+
+env:
+  BUILD_DIR: '${{github.workspace}}/build'
+  QT_VERSION: '6.6.3'
+
+jobs:
+  build-windows:
+    strategy:
+      matrix:
+        build_type: [Debug, Release]
+        compiler: [msvc]
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: cmd
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+          spectre: true
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          aqtversion: '==3.1.*'
+          version: '${{env.QT_VERSION}}'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2019_64'
+          dir: '${{github.workspace}}/qt'
+          cache: true
+
+      - name: Configure CMake
+        run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DQT_BASEDIR="${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/msvc2019_64" -DCMDSEQEDIT_USE_LTO=ON
+
+      - name: Build Binaries
+        working-directory: '${{env.BUILD_DIR}}'
+        run: cmake --build . --config ${{matrix.build_type}} -t cmdseqedit -- -j%NUMBER_OF_PROCESSORS%
+
+      - name: Upload Standalone
+        uses: actions/upload-artifact@v4
+        with:
+          name: '${{matrix.target}}-Windows-Standalone-${{matrix.compiler}}-${{matrix.build_type}}'
+          path: |
+            ${{env.BUILD_DIR}}/LICENSE
+            ${{env.BUILD_DIR}}/cmdseqedit.exe
+            ${{env.BUILD_DIR}}/*.dll
+            ${{env.BUILD_DIR}}/platforms/*.dll
+            ${{env.BUILD_DIR}}/styles/*.dll
+          retention-days: 7
+
+      - name: Create Installer
+        working-directory: ${{env.BUILD_DIR}}
+        run: cpack
+
+      - name: Upload Installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: '${{matrix.target}}-Windows-Installer-${{matrix.compiler}}-${{matrix.build_type}}'
+          path: |
+            ${{env.BUILD_DIR}}/CmdSeqEdit-*-win64.exe
+          retention-days: 7
+
+      - name: Create Standalone Compatibility [build_type:Release]
+        if: ${{matrix.build_type == 'Release'}}
+        working-directory: ${{env.BUILD_DIR}}
+        run: |
+          curl -L -o "__qt__.7z" "https://github.com/crystalidea/qt6windows7/releases/download/v${{env.QT_VERSION}}/qt6_x64_to_run_on_windows7.7z"
+          7z x __qt__.7z -o__qt__ -y
+          REM Overwrite the already copied binaries for standalone version
+          copy /Y __qt__\platforms\qwindows.dll        platforms\qwindows.dll
+          copy /Y __qt__\styles\qwindowsvistastyle.dll styles\qwindowsvistastyle.dll
+          copy /Y __qt__\Qt6Core.dll                   Qt6Core.dll
+          copy /Y __qt__\Qt6Gui.dll                    Qt6Gui.dll
+          copy /Y __qt__\Qt6Widgets.dll                Qt6Widgets.dll
+          REM Overwrite the source of the binaries for installer version
+          copy /Y __qt__\platforms\qwindows.dll        "${{github.workspace}}\qt\Qt\${{env.QT_VERSION}}\msvc2019_64\plugins\platforms\qwindows.dll"
+          copy /Y __qt__\styles\qwindowsvistastyle.dll "${{github.workspace}}\qt\Qt\${{env.QT_VERSION}}\msvc2019_64\plugins\styles\qwindowsvistastyle.dll"
+          copy /Y __qt__\Qt6Core.dll                   "${{github.workspace}}\qt\Qt\${{env.QT_VERSION}}\msvc2019_64\bin\Qt6Core.dll"
+          copy /Y __qt__\Qt6Gui.dll                    "${{github.workspace}}\qt\Qt\${{env.QT_VERSION}}\msvc2019_64\bin\Qt6Gui.dll"
+          copy /Y __qt__\Qt6Widgets.dll                "${{github.workspace}}\qt\Qt\${{env.QT_VERSION}}\msvc2019_64\bin\Qt6Widgets.dll"
+
+      - name: Upload Standalone Compatibility [build_type:Release]
+        if: ${{matrix.build_type == 'Release'}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: '${{matrix.target}}-Windows-Standalone-Compatibility-${{matrix.compiler}}-${{matrix.build_type}}'
+          path: |
+            ${{env.BUILD_DIR}}/LICENSE
+            ${{env.BUILD_DIR}}/cmdseqedit.exe
+            ${{env.BUILD_DIR}}/*.dll
+            ${{env.BUILD_DIR}}/platforms/*.dll
+            ${{env.BUILD_DIR}}/styles/*.dll
+          retention-days: 7
+
+      - name: Create Compatibility Installer [build_type:Release]
+        if: ${{matrix.build_type == 'Release'}}
+        working-directory: ${{env.BUILD_DIR}}
+        run: cpack
+
+      - name: Upload Compatibility Installer [build_type:Release]
+        if: ${{matrix.build_type == 'Release'}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: '${{matrix.target}}-Windows-Installer-Compatibility-${{matrix.compiler}}-${{matrix.build_type}}'
+          path: |
+            ${{env.BUILD_DIR}}/CmdSeqEdit-*-win64.exe
+          retention-days: 7
+
+      - name: Upload Standalone PDBs
+        uses: actions/upload-artifact@v4
+        with:
+          name: '${{matrix.target}}-Windows-PDBs-${{matrix.compiler}}-${{matrix.build_type}}'
+          path: |
+            ${{env.BUILD_DIR}}/cmdseqedit.pdb
+          retention-days: 7
+
+  build-linux:
+    strategy:
+      matrix:
+        build_type: [Debug, Release]
+        compiler: [gcc]
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Necessary Packages
+        run: sudo apt update && sudo apt install -y cmake build-essential ninja-build chrpath
+
+      - name: Install GCC [compiler:gcc]
+        if: ${{matrix.compiler == 'gcc'}}
+        uses: egor-tensin/setup-gcc@v1
+        with:
+          version: 11
+          platform: x64
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          aqtversion: '==3.1.*'
+          version: '${{env.QT_VERSION}}'
+          host: 'linux'
+          target: 'desktop'
+          arch: 'gcc_64'
+          dir: '${{github.workspace}}/qt'
+          cache: true
+
+      - name: Configure CMake
+        run: cmake -G "Ninja" -B "${{env.BUILD_DIR}}" -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DQT_BASEDIR="${{github.workspace}}/qt/Qt/${{env.QT_VERSION}}/gcc_64" -DCMDSEQEDIT_USE_LTO=ON
+
+      - name: Build Binaries
+        working-directory: '${{env.BUILD_DIR}}'
+        run: |
+          cmake --build . --config ${{matrix.build_type}} -t cmdseqedit -- -j$(nproc)
+
+      - name: Fixup Binaries
+        run: |
+          chmod +x '${{env.BUILD_DIR}}/cmdseqedit'
+
+          # runpath cleanup for the Qt binaries. These are (mostly) wrong, leading to crashes
+          for f in ${{env.BUILD_DIR}}/*.so*; do
+            echo "Fixing $f..."
+            chrpath -r '$ORIGIN' "$f"
+          done
+          for f in ${{env.BUILD_DIR}}/*/*.so*; do
+            echo "Fixing $f..."
+            chrpath -r '$ORIGIN/..' "$f"
+          done
+
+      - name: Upload Standalone [compiler:gcc]
+        if: ${{matrix.compiler == 'gcc'}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: '${{matrix.target}}-Linux-Standalone-${{matrix.compiler}}-${{matrix.build_type}}'
+          path: |
+            ${{env.BUILD_DIR}}/LICENSE
+            ${{env.BUILD_DIR}}/cmdseqedit
+            ${{env.BUILD_DIR}}/*.so*
+            ${{env.BUILD_DIR}}/egldeviceintegrations/*.so*
+            ${{env.BUILD_DIR}}/platforminputcontexts/*.so*
+            ${{env.BUILD_DIR}}/platforms/*.so*
+            ${{env.BUILD_DIR}}/platformthemes/*.so*
+            ${{env.BUILD_DIR}}/wayland-decoration-client/*.so*
+            ${{env.BUILD_DIR}}/wayland-graphics-integration-client/*.so*
+            ${{env.BUILD_DIR}}/wayland-shell-integration/*.so*
+            ${{env.BUILD_DIR}}/xcbglintegrations/*.so*
+          retention-days: 7
+
+      - name: Create Installer [compiler:gcc]
+        if: ${{matrix.compiler == 'gcc'}}
+        working-directory: ${{env.BUILD_DIR}}
+        run: cpack
+
+      - name: Upload Installer [compiler:gcc]
+        if: ${{matrix.compiler == 'gcc'}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: '${{matrix.target}}-Linux-Installer-${{matrix.compiler}}-${{matrix.build_type}}'
+          path: |
+            ${{env.BUILD_DIR}}/CmdSeqEdit-*-Linux.deb
+          retention-days: 7
+
+  deploy:
+    needs:
+      - build-windows
+      - build-linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Artifacts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = (await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: ${{github.run_id}},
+            })).data.artifacts;
+            const filteredArtifacts = artifacts.filter(artifact => artifact.name.includes("Release"));
+            console.log(`Found ${artifacts.length} artifacts - ${filteredArtifacts.length} qualify for upload.`);
+            for (const artifact of filteredArtifacts) {
+              console.log(`Downloading "${artifact.name}.zip"...`);
+              let download = await github.rest.actions.downloadArtifact({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                artifact_id: artifact.id,
+                archive_format: 'zip',
+              });
+              let fs = require('fs');
+              fs.writeFileSync(`${{github.workspace}}/${artifact.name}.zip`, Buffer.from(download.data));
+            }
+            console.log("Artifact download complete!");
+
+      - name: Upload Release
+        uses: actions/upload-artifact@v4
+        with:
+          name: Release-Artifacts
+          path: |
+            ${{github.workspace}}/*.zip
+          retention-days: 7
