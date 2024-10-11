@@ -18,7 +18,6 @@
 #include <QStyleFactory>
 #include <QThread>
 #include <QVBoxLayout>
-#include <sourcepp/FS.h>
 #include <steampp/steampp.h>
 
 #include "../utility/Options.h"
