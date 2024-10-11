@@ -127,7 +127,7 @@ Window::Window(QWidget* parent)
 	splitter->setStretchFactor(0, 1);
 
 	// Center pane
-	this->commandList = new CommandListView{splitter};
+	this->commandList = new CommandListView{this->sequenceList->selectionModel(), this, splitter};
 	this->commandList->setMinimumWidth(100);
 	splitter->addWidget(this->commandList);
 	splitter->setStretchFactor(1, 1);
@@ -279,6 +279,10 @@ bool Window::closeFile() {
 		return true;
 	}
 
+	this->sequenceList->clearSelection();
+	this->commandList->setSelectedSequence(-1);
+	this->commandList->clearSelection();
+
 	this->sequenceList->beginRefresh();
 	this->cmdSeq = std::nullopt;
 	this->sequenceList->endRefresh();
@@ -288,7 +292,7 @@ bool Window::closeFile() {
 }
 
 void Window::about() {
-	QMessageBox::about(this, tr("About"), tr("%1\n\nCreated by craftablescience\nCopyright (c) 2024, Laura Lewis\n\nBuilt using the SourcePP parser collection").arg(PROJECT_TITLE.data()));
+	QMessageBox::about(this, tr("About"), tr("%1\n\nCreated by craftablescience\nCopyright (c) 2024, Laura Lewis\n\nBuilt using the SourcePP parser collection.").arg(PROJECT_TITLE.data()));
 }
 
 void Window::rebuildOpenInMenu() {

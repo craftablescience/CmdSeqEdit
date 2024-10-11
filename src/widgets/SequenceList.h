@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string_view>
+
 #include <QAbstractItemModel>
 #include <QListView>
 #include <QMetaType>
@@ -23,19 +25,15 @@ public:
 
 	[[nodiscard]] Qt::ItemFlags flags(const QModelIndex& index) const override;
 
-	[[nodiscard]] Qt::DropActions supportedDropActions() const override;
-
-	//bool insertRows(int row, int count, const QModelIndex& parent) override;
-
-	//bool removeRows(int row, int count, const QModelIndex& parent) override;
-
-	bool moveRows(const QModelIndex& sourceParent, int sourceRow, int count, const QModelIndex& destinationParent, int destinationRow) override;
-
 	void beginRefresh();
 
 	void endRefresh();
 
 private:
+	[[nodiscard]] std::vector<toolpp::CmdSeq::Sequence>* getSequencesOrNullIfInvalid();
+
+	[[nodiscard]] const std::vector<toolpp::CmdSeq::Sequence>* getSequencesOrNullIfInvalid() const;
+
 	Window* window;
 };
 
